@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+  </head>
+  <body>
+   <div style="margin:0 auto;width:480px;height:650px;background:#323232;
+   text-align:center;vertical-align:middle">
+    <canvas id="canvas" width="480px" height="650px" >
+	</canvas>
+   </div>
+ 
+     <script src="shape.js"></script>
+   <script>
+      //创建画布
+      var canvas=document.getElementById("canvas");
+	  var context=canvas.getContext("2d");  
+	  //定义游戏的5个阶段
+	  const START=0;//欢迎阶段
+	  const STARTTING=1;//过渡动画
+      const RUNNING=2;//运行阶段
+	  const PAUSED=3;//暂停阶段
+	  const GAMEOVER=4;//游戏结束
+      const HEIGHT=canvas.height;//画布的高
+	  const WIDTH=canvas.width;//画布的宽
+	  var state=START;//状态为0；
+	  var time=0;//计数变量
+	  var SCORE=0;//得分
+
+
+      //1.1创建背景图片的对象
+	  var color=new Color(COLOR);
+	  var sky=new Sky(SKY);
+	 // console.log(color);
+//从第一阶段到第二阶段
+	     canvas.onclick=function(){
+		   if(state==START){
+		     state=STARTTING;
+		   }else if(state==GAMEOVER){
+		     //初始化一切数据
+              
+		   }   
+		 }
+//第二阶段（3张图片的切换）
+       var loading=new Loading(LOADING);
+//第三阶段(我方飞机出现上下左右操作)
+       var hero=new Hero(HERO);//创建我放飞机
+
+    //随机敌机出现类型
+	  function createEnemies(){
+		  time++;
+		  if(time%100==0){
+	    var num=Math.floor(Math.random()*100);
+		if(num<=80){//创建一个敌机出现频次
+		  var enemy=new Enemy(ENEMY1);
+		  enemies[enemies.length]=enemy;//将他添加到敌机数组中
+		}else if(num<90){
+		  var enemy=new Enemy(ENEMY2);
+		  enemies[enemies.length]=enemy;
+		}else{//限制了大飞机的个数
+		  if(enemies.length>0&&enemies[0].type!=2){
+		     var enemy=new Enemy(ENEMY3);
+			 enemies.splice(0,0,enemy);
+		  }
+		}
+	   }
+	  }
+	  //绘制暂停
+	  var paused=new Image();
+	  paused.src="images/game_pause_nor.png";
+	  //游戏结束阶段
+	  function gameOver(){
+	    context.font="bold 36px 微软雅黑";
+		context.fillText("GAMEOVER:得分"+SCORE,WIDTH/2-200,HEIGHT/2);
+	  }
+	  //绘制得分及生命值
+	  function paintText(){
+		context.font="bold 24px 微软雅黑";
+	    context.fillText("生命值:"+hero.life,WIDTH-150,50);
+		context.fillText("得分:"+SCORE,50,50);
+	  }
+	  //核心控制器
+	  setInterval(function(){ 
+		  context.clearRect(0,0,480,650);//清空一次
+		
+		  sky.step();//背景移动
+		  sky.paint();//背景绘制
+		  color.step();//p飞机的移动函数
+		  color.paint();//p飞机的绘制函数
+          switch(state){
+		 case START:
+		  //1.2完成logo的加载
+		     context.drawImage(logo,20,0);
+			 break;
+
+	     case STARTTING:
+		     loading.paint();
+			 loading.step();
+		    break;
+
+		 case RUNNING:
+             hero.paint();
+			 hero.step();
+			 hero.shoot();
+			 paintBullets();
+			 stepBullets();
+			 delBullets();
+			 createEnemies();
+			 paintEnemies();
+			 stepEnemies();
+            //遍历敌机，让他们射击子弹
+             for(var i=0,len=enemies.length;i<len;i++){
+			    enemies[i].shoot();
+			 }
+
+			 paintEbullets();//绘制所有敌机子弹
+			 stepEbullets();//移动所有敌机子弹
+
+			 paintText();
+			 checkHit();
+			 delEnemies();
+			 delEbullets();
+			 checkHHit();
+             break;
+
+		 case PAUSED:
+			 hero.paint();
+			 paintBullets();
+			 paintEnemies();
+			 paintText();
+			 context.drawImage(paused,WIDTH/2-30,HEIGHT/2-22.5);
+			 break;
+
+		 case GAMEOVER:
+				hero.paint();
+				paintBullets();
+				paintEnemies();
+				gameOver();
+				paintText();
+				break;
+		  }
+		  
+	  },10);
+   </script>
+ 
+  </body>
+</html>
